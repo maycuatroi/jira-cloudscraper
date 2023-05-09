@@ -40,6 +40,7 @@ from typing import (
 )
 from urllib.parse import parse_qs, quote, urlparse
 
+import cloudscraper
 import requests
 from packaging.version import parse as parse_version
 from requests import Response
@@ -550,7 +551,7 @@ class JIRA:
         # Add the SSL Cert to the request if configured
         self._add_ssl_cert_verif_strategy_to_session()
 
-        self._session.headers.update(self._options["headers"])
+        # self._session.headers.update(self._options["headers"])
 
         if "cookies" in self._options:
             self._session.cookies.update(self._options["cookies"])
@@ -3696,7 +3697,9 @@ class JIRA:
         Returns:
             ResilientSession
         """
-        self._session = ResilientSession(timeout=timeout)
+        self._session = cloudscraper.create_scraper()
+        # self._session.headers.update(            {                'X-Atlassian-Token': 'nocheck' })
+
         self._session.auth = (username, password)
 
     def _create_oauth_session(
