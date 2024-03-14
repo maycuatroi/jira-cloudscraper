@@ -92,6 +92,7 @@ from jira.resources import (
     WorkflowScheme,
     Worklog,
 )
+from jira.sessions.selenium_session import SeleniumSession
 from jira.utils import json_loads, threaded_requests
 
 try:
@@ -403,6 +404,7 @@ class JIRA:
         timeout: None | float | tuple[float, float] | tuple[float, None] | None = None,
         auth: tuple[str, str] = None,
         default_batch_sizes: dict[type[Resource], int | None] | None = None,
+        driver=None,
     ):
         """Construct a Jira client instance.
 
@@ -476,10 +478,11 @@ class JIRA:
               default batch-size. By default all Resources will be queried in batches of 100. E.g., setting this to
               ``{Issue: 500, Resource: None}`` will make :py:meth:`search_issues` query Issues in batches of 500, while
               every other item type's batch-size will be controlled by the backend. (Default: None)
+            driver (Optional[Any]): Selenium driver to use for browser automation. (Default: None)
         """
         # force a copy of the tuple to be used in __del__() because
         # sys.version_info could have already been deleted in __del__()
-
+        self.driver = driver
         self.sys_version_info = tuple(sys.version_info)
         if options is None:
             options = {}
@@ -544,7 +547,12 @@ class JIRA:
             # always log in for cookie based auth, as we need a first request to be logged in
             validate = True
         else:
-            self._session = ResilientSession(timeout=timeout)
+            if self.driver:
+                self._session = self._create_selenium_session(timeout)
+            else:
+                # cloud scraper session
+                self._session = cloudscraper.create_scraper()
+
 
         # Add the client authentication certificate to the request if configured
         self._add_client_cert_to_session()
@@ -5096,3 +5104,6 @@ class JIRA:
         url = self._get_url("backlog/issue", base=self.AGILE_BASE_URL)
         payload = {"issues": issue_keys}  # TODO: should be list of issues
         return self._session.post(url, data=json.dumps(payload))
+
+    def _create_selenium_session(self, timeout):
+        return SeleniumSession(self._options, self.driver, timeout)

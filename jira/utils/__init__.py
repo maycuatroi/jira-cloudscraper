@@ -1,6 +1,7 @@
 """Jira utils used internally."""
 from __future__ import annotations
 
+import json
 import threading
 import warnings
 from typing import Any, cast
@@ -70,6 +71,9 @@ def json_loads(resp: Response | None) -> Any:
     Returns:
         Union[List[Dict[str, Any]], Dict[str, Any]]: the json
     """
+    if isinstance(resp, str):
+        resp = json.loads(resp)
+        return resp
     raise_on_error(resp)  # if 'resp' is None, will raise an error here
     resp = cast(Response, resp)  # tell mypy only Response-like are here
     try:
