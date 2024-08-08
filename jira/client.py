@@ -2416,6 +2416,7 @@ class JIRA:
         comment: (str | None) = None,
         started: (datetime.datetime | None) = None,
         user: (str | None) = None,
+        typeOfWork: (str | None) = 'Create'
     ) -> Worklog:
         """Add a new worklog entry on an issue and return a Resource for it.
 
@@ -2449,6 +2450,8 @@ class JIRA:
             data["timeSpentSeconds"] = timeSpentSeconds
         if comment is not None:
             data["comment"] = comment
+        if typeOfWork is not None:
+            data["typeOfWork"] = typeOfWork
         elif user:
             # we log user inside comment as it doesn't always work
             data["comment"] = user
